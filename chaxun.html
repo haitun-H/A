@@ -57,9 +57,9 @@
 </div>
 
 <script>
-    // 你的 Supabase 函数 URL
+    // Supabase 函数地址（无需修改，与你已部署的一致）
     const API_URL = "https://brydhwbiypnnktuwawpq.supabase.co/functions/v1/transactions";
-    // 你的 Supabase Anon Key（公开使用）
+    // Supabase Anon Key（公开使用）
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyeWRod2JpeXBubmt0dXdhd3BxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNDM2NTAsImV4cCI6MjA4OTcxOTY1MH0.oPnF_GAQRX99_0bDgvabY8iCuq6rxERE4HgKKO0zcD4";
 
     let hourlyChart = null, dailyChart = null;
@@ -84,7 +84,7 @@
             });
             if (!response.ok) {
                 const err = await response.json();
-                throw new Error(err.error || '请求失败');
+                throw new Error(err.error || `HTTP ${response.status}`);
             }
             const data = await response.json();
             renderContent(data);
@@ -142,12 +142,13 @@
             <div class="section">
                 <h2>📜 交易记录 (最近100条)</h2>
                 <div class="table-wrapper">
-                    表格
+                    <table>
                         <thead>
-                            <tr><th>时间</th><th>交易哈希</th><th>方向</th><th>金额 (USDT0)</th><th>从</th><th>到</th>  </thead>
+                            <tr><th>时间</th><th>交易哈希</th><th>方向</th><th>金额 (USDT0)</th><th>从</th><th>到</th></tr>
+                        </thead>
                         <tbody>
         `;
-        if (transactions.length === 0) tableHtml += '   <td colspan="6" style="text-align:center;">暂无交易记录</td>  ';
+        if (transactions.length === 0) tableHtml += '<tr><td colspan="6" style="text-align:center;">暂无交易记录</td></tr>';
         else {
             transactions.forEach(tx => {
                 const directionClass = tx.direction === 'out' ? 'direction-out' : 'direction-in';
@@ -164,7 +165,7 @@
                 `;
             });
         }
-        tableHtml += '</tbody> </div></div>';
+        tableHtml += '</tbody></table></div></div>';
 
         document.getElementById('content').innerHTML = statsHtml + opponentsHtml + chartsHtml + tableHtml;
         document.getElementById('content').style.display = 'block';
