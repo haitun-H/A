@@ -4,424 +4,207 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>X Layer USDT0 转账记录查询</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 1400px;
-            margin: 20px auto;
-            padding: 0 20px;
-            background-color: #f5f5f5;
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-        }
-        .query-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        input[type="text"] {
-            width: 70%;
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-right: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        .info {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #666;
-        }
-        .error {
-            color: red;
-            margin-top: 10px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            border-radius: 8px;
-            overflow: auto;
-        }
-        th, td {
-            padding: 12px 8px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        tr:hover {
-            background-color: #f9f9f9;
-        }
-        .tx-hash {
-            font-family: monospace;
-            word-break: break-all;
-        }
-        .address {
-            font-family: monospace;
-            word-break: break-all;
-        }
-        .loading {
-            text-align: center;
-            padding: 20px;
-            font-size: 18px;
-            color: #666;
-        }
-        .pagination {
-            margin-top: 20px;
-            text-align: center;
-        }
-        .pagination button {
-            margin: 0 5px;
-            padding: 5px 10px;
-        }
-        .summary {
-            margin: 10px 0;
-            font-size: 14px;
-            color: #333;
-        }
+        /* 样式代码与之前相同，省略重复部分，可复制之前样式 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; color: #333; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 20px; color: #1a73e8; }
+        .search-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 30px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .search-box input { flex: 1; padding: 12px 16px; font-size: 16px; border: 1px solid #ddd; border-radius: 8px; outline: none; }
+        .search-box input:focus { border-color: #1a73e8; }
+        .search-box button { padding: 12px 24px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; }
+        .search-box button:hover { background: #1557b0; }
+        .search-box button:disabled { background: #aaa; cursor: not-allowed; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); text-align: center; }
+        .stat-card h3 { font-size: 14px; color: #666; margin-bottom: 8px; }
+        .stat-card .value { font-size: 28px; font-weight: bold; color: #1a73e8; }
+        .section { background: white; border-radius: 12px; padding: 20px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .section h2 { margin-bottom: 20px; font-size: 20px; border-left: 4px solid #1a73e8; padding-left: 12px; }
+        .opponents-list { display: flex; flex-wrap: wrap; gap: 12px; }
+        .opponent-item { background: #f0f2f5; padding: 8px 16px; border-radius: 20px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .opponent-address { font-family: monospace; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+        .opponent-count { background: #1a73e8; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+        .charts-container { display: flex; flex-wrap: wrap; gap: 30px; }
+        .chart-box { flex: 1; min-width: 280px; }
+        canvas { max-height: 300px; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 12px 8px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; font-weight: 600; }
+        .direction-out { color: #e67e22; font-weight: 500; }
+        .direction-in { color: #2ecc71; font-weight: 500; }
+        .hash { font-family: monospace; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+        .loading { text-align: center; padding: 40px; font-size: 18px; color: #666; }
+        .error { background: #fee; color: #c00; padding: 12px; border-radius: 8px; margin-bottom: 20px; }
         @media (max-width: 768px) {
-            th, td {
-                font-size: 12px;
-                padding: 8px 4px;
-            }
-            input[type="text"] {
-                width: 60%;
-            }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-container { flex-direction: column; }
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
 </head>
 <body>
-    <h1>X Layer USDT0 转账记录查询</h1>
-    <div class="query-container">
-        <input type="text" id="addressInput" placeholder="输入以太坊地址 (例如: 0x...)">
-        <button id="queryBtn" onclick="queryTransfers()">查询</button>
-        <div class="info">
-            <strong>USDT0合约地址:</strong> 0x779Ded0c9e1022225f8E0630b35a9b54bE713736<br>
-            <strong>注意:</strong> 默认查询最近 <span id="blockRangeSpan">100000</span> 个区块，最多显示 <span id="maxRecordsSpan">500</span> 条记录。
-        </div>
-        <div id="errorMsg" class="error"></div>
+<div class="container">
+    <h1>🔍 X Layer USDT0 转账记录查询</h1>
+    <div class="search-box">
+        <input type="text" id="addressInput" placeholder="输入 X Layer 地址 (0x...)" autocomplete="off">
+        <button id="searchBtn">查询</button>
     </div>
-    <div id="results">
-        <div id="summary" class="summary"></div>
-        <div id="tableContainer"></div>
-        <div id="pagination" class="pagination"></div>
-    </div>
+    <div id="errorMsg" class="error" style="display: none;"></div>
+    <div id="loading" class="loading" style="display: none;">加载中，请稍候...</div>
+    <div id="content" style="display: none;"></div>
+</div>
 
-    <script>
-        // ==================== 配置 ====================
-        const RPC_URL = "https://shy-shy-surf.xlayer-mainnet.quiknode.pro/fa135d65d86e5cf4688019042067d4449f1235c5";
-        const USDT0_ADDRESS = "0x779Ded0c9e1022225f8E0630b35a9b54bE713736";
-        // 查询的区块范围（最近多少个区块）
-        const BLOCK_RANGE = 100000;      // 可调整
-        // 最大显示记录数（避免页面卡死）
-        const MAX_RECORDS = 500;
-        
-        // ERC-20 最小 ABI：decimals 和 Transfer 事件
-        const ERC20_ABI = [
-            "function decimals() view returns (uint8)",
-            "event Transfer(address indexed from, address indexed to, uint256 value)"
-        ];
-        
-        let provider = null;
-        let contract = null;
-        let decimals = null;
-        
-        // 缓存区块时间戳，避免重复请求
-        const blockTimestampCache = new Map();
-        
-        // 当前查询的结果（所有匹配的记录）
-        let allRecords = [];
-        let currentPage = 1;
-        const recordsPerPage = 20;
-        
-        // 初始化连接
-        async function init() {
-            try {
-                provider = new ethers.JsonRpcProvider(RPC_URL);
-                // 测试连接
-                const blockNumber = await provider.getBlockNumber();
-                console.log("连接成功，当前区块高度:", blockNumber);
-                
-                // 获取合约实例
-                contract = new ethers.Contract(USDT0_ADDRESS, ERC20_ABI, provider);
-                // 获取代币精度
-                decimals = await contract.decimals();
-                console.log("USDT0 精度:", decimals);
-                document.getElementById("blockRangeSpan").innerText = BLOCK_RANGE;
-                document.getElementById("maxRecordsSpan").innerText = MAX_RECORDS;
-            } catch (err) {
-                console.error("初始化失败:", err);
-                showError("连接节点失败: " + err.message);
+<script>
+    const API_URL = "https://brydhwbiypnnktuwawpq.supabase.co/functions/v1/transactions";
+
+    let hourlyChart = null, dailyChart = null;
+
+    async function fetchData(address) {
+        const searchBtn = document.getElementById('searchBtn');
+        const loadingDiv = document.getElementById('loading');
+        const contentDiv = document.getElementById('content');
+        const errorDiv = document.getElementById('errorMsg');
+
+        searchBtn.disabled = true;
+        loadingDiv.style.display = 'block';
+        contentDiv.style.display = 'none';
+        errorDiv.style.display = 'none';
+
+        try {
+            const response = await fetch(`${API_URL}?address=${address}`);
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || '请求失败');
             }
+            const data = await response.json();
+            renderContent(data);
+        } catch (err) {
+            errorDiv.textContent = err.message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => errorDiv.style.display = 'none', 5000);
+        } finally {
+            searchBtn.disabled = false;
+            loadingDiv.style.display = 'none';
         }
-        
-        // 显示错误信息
-        function showError(msg) {
-            const errorDiv = document.getElementById("errorMsg");
-            errorDiv.innerText = msg;
-            setTimeout(() => {
-                if (errorDiv.innerText === msg) errorDiv.innerText = "";
-            }, 5000);
+    }
+
+    function renderContent(data) {
+        const { transactions, summary, topOpponents, hourlyDistribution, dailyDistribution } = data;
+
+        const statsHtml = `
+            <div class="stats-grid">
+                <div class="stat-card"><h3>总转出 (USDT0)</h3><div class="value">${summary.totalSent.toFixed(6)}</div></div>
+                <div class="stat-card"><h3>总接收 (USDT0)</h3><div class="value">${summary.totalReceived.toFixed(6)}</div></div>
+                <div class="stat-card"><h3>净额</h3><div class="value">${summary.netChange.toFixed(6)}</div></div>
+                <div class="stat-card"><h3>交易总次数</h3><div class="value">${summary.totalTxCount}</div><div class="sub">转出:${summary.sentCount} / 接收:${summary.receivedCount}</div></div>
+            </div>
+        `;
+
+        let opponentsHtml = '<div class="section"><h2>🤝 主要交互地址</h2><div class="opponents-list">';
+        if (topOpponents.length === 0) opponentsHtml += '<div>暂无交互记录</div>';
+        else {
+            topOpponents.forEach(opp => {
+                opponentsHtml += `
+                    <div class="opponent-item">
+                        <span class="opponent-address">${opp.address.slice(0, 8)}...${opp.address.slice(-6)}</span>
+                        <span class="opponent-count">${opp.count} 次</span>
+                    </div>
+                `;
+            });
         }
-        
-        // 获取区块时间戳（带缓存）
-        async function getBlockTimestamp(blockNumber) {
-            if (blockTimestampCache.has(blockNumber)) {
-                return blockTimestampCache.get(blockNumber);
-            }
-            try {
-                const block = await provider.getBlock(blockNumber);
-                const timestamp = block ? block.timestamp : 0;
-                blockTimestampCache.set(blockNumber, timestamp);
-                return timestamp;
-            } catch (err) {
-                console.warn(`获取区块 ${blockNumber} 时间戳失败`, err);
-                return 0;
-            }
-        }
-        
-        // 格式化时间戳
-        function formatTimestamp(timestamp) {
-            if (!timestamp) return "未知";
-            const date = new Date(timestamp * 1000);
-            return date.toLocaleString();
-        }
-        
-        // 格式化金额
-        function formatValue(rawValue) {
-            if (decimals === null) return rawValue.toString();
-            const value = ethers.formatUnits(rawValue, decimals);
-            // 保留合理的小数位数
-            return parseFloat(value).toLocaleString(undefined, { maximumFractionDigits: 6 });
-        }
-        
-        // 截断地址显示
-        function shortenAddress(addr) {
-            if (!addr) return "";
-            return addr.slice(0, 6) + "..." + addr.slice(-4);
-        }
-        
-        // 生成交易浏览器链接（X Layer 使用 OKLink 或类似，这里用通用区块浏览器，可替换）
-        function getTxExplorerUrl(txHash) {
-            return `https://www.oklink.com/xlayer/tx/${txHash}`;
-        }
-        
-        // 主查询函数
-        async function queryTransfers() {
-            const addressInput = document.getElementById("addressInput").value.trim();
-            if (!addressInput) {
-                showError("请输入地址");
-                return;
-            }
-            if (!ethers.isAddress(addressInput)) {
-                showError("地址格式不正确");
-                return;
-            }
-            
-            // 重置UI
-            document.getElementById("errorMsg").innerText = "";
-            document.getElementById("summary").innerHTML = '<div class="loading">查询中，请稍候...</div>';
-            document.getElementById("tableContainer").innerHTML = "";
-            document.getElementById("pagination").innerHTML = "";
-            
-            const queryBtn = document.getElementById("queryBtn");
-            queryBtn.disabled = true;
-            queryBtn.innerText = "查询中...";
-            
-            try {
-                // 确保连接和合约已初始化
-                if (!provider) await init();
-                if (!contract) throw new Error("合约未初始化");
-                
-                // 获取当前区块高度
-                const currentBlock = await provider.getBlockNumber();
-                const fromBlock = Math.max(0, currentBlock - BLOCK_RANGE);
-                const toBlock = currentBlock;
-                console.log(`查询区块范围: ${fromBlock} 到 ${toBlock}`);
-                
-                // 准备事件过滤器：Transfer 事件
-                const filter = contract.filters.Transfer();
-                
-                // 获取所有 Transfer 事件（可能很多，但 ethers 内部会自动分批）
-                console.log("开始获取事件...");
-                const events = await contract.queryFilter(filter, fromBlock, toBlock);
-                console.log(`获取到 ${events.length} 条 Transfer 事件`);
-                
-                // 过滤出与目标地址相关的事件
-                const targetAddress = addressInput.toLowerCase();
-                const matchedEvents = events.filter(event => {
-                    const from = event.args.from.toLowerCase();
-                    const to = event.args.to.toLowerCase();
-                    return from === targetAddress || to === targetAddress;
-                });
-                console.log(`匹配到 ${matchedEvents.length} 条记录`);
-                
-                if (matchedEvents.length === 0) {
-                    document.getElementById("summary").innerHTML = '<div class="info">未找到相关转账记录。</div>';
-                    queryBtn.disabled = false;
-                    queryBtn.innerText = "查询";
-                    return;
-                }
-                
-                // 限制最大记录数
-                let limitedEvents = matchedEvents;
-                let truncated = false;
-                if (limitedEvents.length > MAX_RECORDS) {
-                    limitedEvents = limitedEvents.slice(0, MAX_RECORDS);
-                    truncated = true;
-                }
-                
-                // 按区块号倒序排列（最新的在前）
-                limitedEvents.sort((a, b) => b.blockNumber - a.blockNumber);
-                
-                // 获取所有区块时间戳
-                const blockNumbers = [...new Set(limitedEvents.map(e => e.blockNumber))];
-                console.log("获取区块时间戳...");
-                const timestampsMap = new Map();
-                await Promise.all(blockNumbers.map(async (bn) => {
-                    const ts = await getBlockTimestamp(bn);
-                    timestampsMap.set(bn, ts);
-                }));
-                
-                // 构建记录数组
-                allRecords = [];
-                for (const event of limitedEvents) {
-                    const blockNumber = event.blockNumber;
-                    const txHash = event.transactionHash;
-                    const from = event.args.from;
-                    const to = event.args.to;
-                    const rawValue = event.args.value;
-                    const valueFormatted = formatValue(rawValue);
-                    const timestamp = timestampsMap.get(blockNumber) || 0;
-                    const timeStr = formatTimestamp(timestamp);
-                    
-                    // 标记是发送还是接收
-                    const direction = from.toLowerCase() === targetAddress ? "发送" : "接收";
-                    
-                    allRecords.push({
-                        txHash,
-                        blockNumber,
-                        timestamp: timeStr,
-                        from,
-                        to,
-                        value: valueFormatted,
-                        rawValue: rawValue.toString(),
-                        direction
-                    });
-                }
-                
-                // 显示摘要
-                let summaryMsg = `找到 ${matchedEvents.length} 条记录`;
-                if (truncated) summaryMsg += `，仅显示前 ${MAX_RECORDS} 条`;
-                summaryMsg += `（按区块倒序排列）`;
-                document.getElementById("summary").innerHTML = `<div class="summary">${summaryMsg}</div>`;
-                
-                // 分页显示
-                currentPage = 1;
-                renderTablePage();
-                
-            } catch (err) {
-                console.error("查询出错:", err);
-                showError("查询失败: " + err.message);
-                document.getElementById("summary").innerHTML = "";
-            } finally {
-                queryBtn.disabled = false;
-                queryBtn.innerText = "查询";
-            }
-        }
-        
-        // 渲染当前页的表格
-        function renderTablePage() {
-            if (!allRecords.length) return;
-            
-            const start = (currentPage - 1) * recordsPerPage;
-            const end = start + recordsPerPage;
-            const pageRecords = allRecords.slice(start, end);
-            
-            let html = `
-                <table>
-                    <thead>
-                        <tr>
-                            <th>交易哈希</th>
-                            <th>区块</th>
-                            <th>时间</th>
-                            <th>方向</th>
-                            <th>发送方</th>
-                            <th>接收方</th>
-                            <th>金额 (USDT0)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            
-            for (const rec of pageRecords) {
-                const txLink = `<a href="${getTxExplorerUrl(rec.txHash)}" target="_blank" class="tx-hash">${shortenAddress(rec.txHash)}</a>`;
-                const fromDisplay = `<span class="address" title="${rec.from}">${shortenAddress(rec.from)}</span>`;
-                const toDisplay = `<span class="address" title="${rec.to}">${shortenAddress(rec.to)}</span>`;
-                const directionClass = rec.direction === "发送" ? "style='color:red'" : "style='color:green'";
-                html += `
+        opponentsHtml += '</div></div>';
+
+        const chartsHtml = `
+            <div class="section">
+                <h2>📊 转账画像</h2>
+                <div class="charts-container">
+                    <div class="chart-box">
+                        <canvas id="hourlyChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="dailyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        let tableHtml = `
+            <div class="section">
+                <h2>📜 交易记录 (最近100条)</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr><th>时间</th><th>交易哈希</th><th>方向</th><th>金额 (USDT0)</th><th>从</th><th>到</th></tr>
+                        </thead>
+                        <tbody>
+        `;
+        if (transactions.length === 0) tableHtml += '<tr><td colspan="6" style="text-align:center;">暂无交易记录</td></tr>';
+        else {
+            transactions.forEach(tx => {
+                const directionClass = tx.direction === 'out' ? 'direction-out' : 'direction-in';
+                const directionText = tx.direction === 'out' ? '⬆️ 转出' : '⬇️ 接收';
+                tableHtml += `
                     <tr>
-                        <td>${txLink}</td>
-                        <td>${rec.blockNumber}</td>
-                        <td>${rec.timestamp}</td>
-                        <td ${directionClass}>${rec.direction}</td>
-                        <td>${fromDisplay}</td>
-                        <td>${toDisplay}</td>
-                        <td>${rec.value}</td>
+                        <td>${tx.blockTime}</td>
+                        <td class="hash" title="${tx.hash}">${tx.hash.slice(0, 10)}...${tx.hash.slice(-8)}</td>
+                        <td class="${directionClass}">${directionText}</td>
+                        <td>${tx.amount.toFixed(6)}</td>
+                        <td class="hash" title="${tx.from}">${tx.from.slice(0, 8)}...${tx.from.slice(-6)}</td>
+                        <td class="hash" title="${tx.to}">${tx.to.slice(0, 8)}...${tx.to.slice(-6)}</td>
                     </tr>
                 `;
-            }
-            
-            html += `</tbody></table>`;
-            document.getElementById("tableContainer").innerHTML = html;
-            
-            // 渲染分页控件
-            const totalPages = Math.ceil(allRecords.length / recordsPerPage);
-            let paginationHtml = `<button onclick="changePage(-1)" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
-            paginationHtml += `<span style="margin:0 10px">第 ${currentPage} / ${totalPages} 页</span>`;
-            paginationHtml += `<button onclick="changePage(1)" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
-            document.getElementById("pagination").innerHTML = paginationHtml;
+            });
         }
-        
-        // 翻页
-        function changePage(delta) {
-            const totalPages = Math.ceil(allRecords.length / recordsPerPage);
-            let newPage = currentPage + delta;
-            if (newPage < 1) newPage = 1;
-            if (newPage > totalPages) newPage = totalPages;
-            if (newPage !== currentPage) {
-                currentPage = newPage;
-                renderTablePage();
-            }
+        tableHtml += '</tbody></table></div></div>';
+
+        document.getElementById('content').innerHTML = statsHtml + opponentsHtml + chartsHtml + tableHtml;
+        document.getElementById('content').style.display = 'block';
+
+        // 渲染图表
+        if (hourlyChart) hourlyChart.destroy();
+        const hourlyCtx = document.getElementById('hourlyChart')?.getContext('2d');
+        if (hourlyCtx) {
+            hourlyChart = new Chart(hourlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: Array.from({ length: 24 }, (_, i) => i + ':00'),
+                    datasets: [{ label: '交易次数', data: hourlyDistribution, backgroundColor: 'rgba(26,115,232,0.6)', borderColor: '#1a73e8', borderWidth: 1 }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: '小时交易分布' } } }
+            });
         }
-        
-        // 页面加载时初始化
-        init().catch(console.error);
-    </script>
+        if (dailyChart) dailyChart.destroy();
+        const dailyCtx = document.getElementById('dailyChart')?.getContext('2d');
+        if (dailyCtx) {
+            dailyChart = new Chart(dailyCtx, {
+                type: 'line',
+                data: {
+                    labels: dailyDistribution.map(d => d.date.slice(5)),
+                    datasets: [
+                        { label: '转出金额 (USDT0)', data: dailyDistribution.map(d => d.sent), borderColor: '#e67e22', backgroundColor: 'rgba(230,126,34,0.1)', fill: true, tension: 0.3 },
+                        { label: '接收金额 (USDT0)', data: dailyDistribution.map(d => d.received), borderColor: '#2ecc71', backgroundColor: 'rgba(46,204,113,0.1)', fill: true, tension: 0.3 }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: '近7日每日金额走势' } } }
+            });
+        }
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', () => {
+        const address = document.getElementById('addressInput').value.trim();
+        if (!address) {
+            alert('请输入地址');
+            return;
+        }
+        if (!/^0x[a-fA-F0-9]{40}$/i.test(address)) {
+            alert('地址格式无效，应为 0x 开头的 42 位字符');
+            return;
+        }
+        fetchData(address);
+    });
+</script>
 </body>
 </html>
